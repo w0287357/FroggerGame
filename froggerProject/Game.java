@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 public class Game extends JFrame implements ActionListener, KeyListener {
 
@@ -35,6 +36,10 @@ public class Game extends JFrame implements ActionListener, KeyListener {
     
     //score tracking label
     private JLabel scoreLabel = new JLabel("Score: 0");
+    
+    private DatabaseManager dbManager = new DatabaseManager();
+    
+    private String playerName = "";
     
     //array of car labels
     private JLabel[] CarLabels0 = new JLabel[4];  
@@ -65,6 +70,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
     private int score = 0;
     private boolean gameStarted = false;
     private boolean isRunning = false; 
+    private boolean isOnLog = false;
 
     public Game() {
         setTitle("Frogger");
@@ -114,7 +120,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
         //set row log0 location
         for (int i = 0; i < logs0.length; i++) {
         	logs0[i] = new Log();
-        	logs0[i].setWidth(rand.nextInt(120) + 50); 
+        	logs0[i].setWidth(150); 
         	logs0[i].setHeight(50);  
         	logs0[i].setSpeed(20);  
         	logs0[i].setX(rand.nextInt(screenWidth - logs0[i].getWidth())); 
@@ -124,7 +130,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
         //set row log1 location
         for (int i = 0; i < logs1.length; i++) {
         	logs1[i] = new Log();
-        	logs1[i].setWidth(rand.nextInt(120) + 50); 
+        	logs1[i].setWidth(150); 
         	logs1[i].setHeight(50);  
         	logs1[i].setSpeed(10);  
         	logs1[i].setX(rand.nextInt(screenWidth - logs1[i].getWidth()));
@@ -134,7 +140,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
         //set row log2 location
         for (int i = 0; i < logs2.length; i++) {
         	logs2[i] = new Log();
-        	logs2[i].setWidth(rand.nextInt(120) + 50); 
+        	logs2[i].setWidth(150); 
         	logs2[i].setHeight(50);  
         	logs2[i].setSpeed(-15);  
         	logs2[i].setX(rand.nextInt(screenWidth - logs2[i].getWidth())); 
@@ -262,6 +268,15 @@ public class Game extends JFrame implements ActionListener, KeyListener {
         }
     }
     
+    public void checkCollisionRiver() {
+        if (player.getY() <= 400 && player.getY() >= 300 && isOnLog == false ) {
+        	score -= 50;
+            System.out.println("Score: " + score);
+            updateScoreLabel();
+            resetPlayerPosition();
+        }
+    }
+    
     
     //check if collison with car inside all 3 car arrays
     public void checkCollisionCar() {
@@ -308,7 +323,9 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                     && player.getX() < logs0[i].getX() + logs0[i].getWidth()
                     && player.getY() + player.getHeight() > logs0[i].getY()
                     && player.getY() < logs0[i].getY() + logs0[i].getHeight()) {
-                System.out.println("On logs0");
+            	isOnLog = true;
+            } else {
+            	isOnLog = false;
             }
         }
         
@@ -318,6 +335,9 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                     && player.getY() + player.getHeight() > logs1[i].getY()
                     && player.getY() < logs1[i].getY() + logs1[i].getHeight()) {
             	   System.out.println("On logs1");
+            	   isOnLog = true;
+            } else {
+            	isOnLog = false;
             }
         }
         
@@ -327,7 +347,9 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                     && player.getY() + player.getHeight() > logs2[i].getY()
                     && player.getY() < logs2[i].getY() + logs2[i].getHeight()) {
                 System.out.println("On logs2");
-             
+                isOnLog = true;
+            } else {
+            	isOnLog = false;
             }
         }
     }
@@ -357,6 +379,13 @@ public class Game extends JFrame implements ActionListener, KeyListener {
         startGameLoop(); 
     }
     
+    private void endGame() {
+        dbManager.insertScore(playerName, score);
+        JOptionPane.showMessageDialog(this, "Game Over! Score has been uploaded!");
+        score = 0;
+        playerName = "";
+        updateScoreLabel();
+    }
     
     //stop game
     public void stopGame() {
@@ -373,6 +402,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                     moveLogs();
                     checkCollisionCar();
                     checkCollisionLog();
+                    checkCollisionRiver();
                     checkCollisionScore();
 
                     try {
@@ -523,7 +553,10 @@ public class Game extends JFrame implements ActionListener, KeyListener {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == StartButton) {
+    	String nameInput = JOptionPane.showInputDialog(this, "Enter your name:");
+        if (nameInput != null && !nameInput.trim().isEmpty()) {
+            playerName = nameInput.trim();
+            gameStarted = true;
             startGame();
         }
         if (e.getSource() == PlayAgainButton) {
@@ -531,7 +564,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
             startGame();
         }
         if (e.getSource() == EndGameButton) {
-            System.exit(0);
+        	endGame();
         }
     }
     
