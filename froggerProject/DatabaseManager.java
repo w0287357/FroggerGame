@@ -5,7 +5,7 @@ import java.sql.*;
 public class DatabaseManager {
 
     private Connection connection;
-    private String url = "C:/Users/joshu/game_scores.db";
+    private String url = "game_scores.db";
 
     public DatabaseManager() {
         try {
